@@ -1,0 +1,65 @@
+<html>
+<head>
+  <title></title>
+  <script type="text/javascript" src="vendor/jquery-1.7.1.min.js"></script>  
+  <script type="text/javascript" src="vendor/underscore.js"></script>
+  <script type="text/javascript" src="vendor/moment.min.js"></script>
+  <!--[if lt IE 8]>
+    <script type="text/javascript" src="vendor/json2.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="dist/Snix.js"></script>
+  <script type="text/javascript">
+    var r = Snix;
+
+    var app = new function(){
+      this.name = r.val("joe");
+      this.todos = r.array([
+        {id: _.uniqueId(), prio: r.val("high 1")},
+        {id: _.uniqueId(), prio: r.val("high 2")},
+        {id: _.uniqueId(), prio: r.val("high 3")}
+      ]);
+      this.selectedTodos = r.array();
+      this.selectedTodo = r.val();
+      this.today = r.val(moment());
+    };
+
+    $(function(){
+      r.jQuery();
+      r.binden(app, $("body")[0]);
+    });
+  </script>
+</head>
+<body>
+
+  <span data-bind="text: @name"></span>
+  <input type="text" data-bind="value: @name"/>
+
+  <a href="#" data-bind="click: @todos.add({id: _.uniqueId(), prio: r.val('bllll')})">create</a>
+
+  <ul data-bind="loop: {entries: @todos, as: 'todo'}">
+    <li>
+      <span data-bind="text: todo.name"></span>
+      <input type="text" data-bind="value: @name"/>
+      <span data-bind="text: todo.prio"></span>
+      <input type="text" data-bind="value: todo.prio"/>
+      <a href="#" data-bind="click: @todos.remove(todo)">delete</a>
+    </li>
+  </ul>
+
+  <select data-bind="select: {entries: @todos, label: 'prio', selected: @selectedTodos, multiple: true}" size="6"></select>
+  <select data-bind="select: {entries: @todos, label: 'prio', selected: @selectedTodo}"></select>
+
+  <div data-bind="date: {moment: @today}"></div>
+
+  <!--
+  <form>
+    <ul data-bind="loop: {entries: @todos, as: 'todo'}">
+      <li>
+        <input type="radio" name="todos" data-bind="radio: {entries: @todos, entry: todo, selected: @choosenTodo}"/>
+        <span data-bind="text: todo.name"></span>
+      </li>
+    </ul>
+  </form>
+-->
+</body>
+</html>
