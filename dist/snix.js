@@ -253,7 +253,12 @@ Snix.bindings["loop"] = {
 
     var entries = Snix.unwrap(opts.entries);
 
-    var ids = _.map(entries, function(e){ return Snix.idOf(e); });
+    var ids = _.map(entries, function(e){ 
+      if(!e.id)
+        throw "loop expects an id attribute for each entry";
+
+      return Snix.idOf(e); 
+    });
     var elIds = $("> [data-id]", el).map(function(){ return $(this).attr("data-id"); }).toArray();
 
     if(ids.length == elIds.length && ids.toString() != elIds.toString()){
