@@ -240,26 +240,6 @@ describe("Snix", function(){
       }).toThrow("disposed");
     });
 
-    // it("calls Snix.call passing this as caller and context", function(){
-    //   var fun = function(){};
-    //   spyOn(Snix, "call");
-
-    //   var v = new Snix.Value(10);
-    //   v.asCaller(fun);
-
-    //   expect(Snix.call).toHaveBeenCalledWith(fun, v, v);      
-    // });
-
-    // it("calls Snix.call passing null as caller and this as context", function(){
-    //   var fun = function(){};
-    //   spyOn(Snix, "call");
-
-    //   var v = new Snix.Value(10);
-    //   v.noCaller(fun);
-
-    //   expect(Snix.call).toHaveBeenCalledWith(fun, null, v);
-    // });
-
     it("sets a new value", function(){
       var v = new Snix.Value(10);
 
@@ -385,6 +365,155 @@ describe("Snix", function(){
     expect(c.__value__.dependencies.length).toBe(2);
     expect(_.include(c.__value__.dependencies, arr.__value__)).toBeTruthy();
     expect(_.include(c.__value__.dependencies, arr()[0].active.__value__)).toBeTruthy();
+  });
+
+  describe("Bindings", function(){
+
+    beforeEach(function(){  $("#snix").empty(); });
+    afterEach(function(){   $("#snix").empty(); });
+
+    it("select", function(){
+      var app = {};
+      app.entries = Snix.array([
+        {id: 1, name: 'e1'},
+        {id: 2, name: 'e2'}
+      ]);
+
+      // app.entries();
+
+      $("#snix").append("<select data-bind=\"select: {entries: @entries, label: 'name'}\"></select>")
+
+      Snix.Binding.binden(app, $("#snix")[0]);
+
+      expect($("#snix option").length).toBe(3); // 2 entries + 1 caption
+    });
+
+    it("text", function(){
+      var app = {
+        name: Snix.val("joe")
+      };
+
+      $("#snix").append("<span data-bind=\"text: @name\"></span>");
+      Snix.Binding.binden(app, $("#snix")[0]);
+
+      expect($("#snix span").text()).toBe("joe");
+
+      app.name("bob");
+
+      expect($("#snix span").text()).toBe("bob");
+    });
+
+    it("text", function(){
+      var app = {
+        name: Snix.val("joe")
+      };
+
+      $("#snix").append("<input type='text' data-bind=\"value: @name\"/>");
+      Snix.Binding.binden(app, $("#snix")[0]);
+
+      expect($("#snix input").val()).toBe("joe");
+
+      app.name("bob");
+
+      expect($("#snix input").val()).toBe("bob");
+
+      $("#snix input").val("jim").trigger("change");
+
+      expect(app.name()).toBe("jim");
+    });
+
+    it("check", function(){
+      var app = {
+        done: Snix.boolean(false)
+      };
+
+      $("#snix").append("<input type='checkbox' data-bind=\"check: @done\"/>");
+      Snix.Binding.binden(app, $("#snix")[0]);
+
+      expect($("#snix input").is(":checked")).toBeFalsy();
+
+      app.done(true);
+
+      expect($("#snix input").is(":checked")).toBeTruthy();
+
+      $("#snix input").removeAttr("checked").trigger("change");
+
+      expect(app.done()).toBeFalsy();
+
+      $("#snix input").attr("checked", "checked").trigger("change");
+
+      expect(app.done()).toBeTruthy();
+    });
+
+    it("click", function(){
+      var app = {
+        action: function(){}
+      };
+
+      $("#snix").append("<a href='#' data-bind=\"click: @action()\"/>");
+      Snix.Binding.binden(app, $("#snix")[0]);
+
+      spyOn(app, "action");
+
+      $("#snix a").trigger("click");
+
+      expect(app.action).toHaveBeenCalled();
+    });
+
+    it("css", function(){
+      var app = {
+        done: Snix.boolean(false)
+      };
+
+      $("#snix").append("<span data-bind=\"css: {myClazz: @done()}\"></span>");
+      Snix.Binding.binden(app, $("#snix")[0]);
+
+      expect($("#snix span").hasClass("myClazz")).toBeFalsy();
+
+      app.done(true);
+      expect($("#snix span").hasClass("myClazz")).toBeTruthy();
+
+      app.done(false);
+      expect($("#snix span").hasClass("myClazz")).toBeFalsy();
+    });
+
+    it("loop", function(){
+      var app = {};
+
+      var e1 = {id: 1, name: 'e1'};
+      var e2 = {id: 2, name: 'e2'};
+
+      app.entries = Snix.array([e1, e2]);
+
+      $("#snix").append("<ul data-bind=\"loop: {entries: @entries, as: 'entry'}\"><li><span data-bind=\"text: entry.name\"></span></li></ul>");
+      Snix.Binding.binden(app, $("#snix")[0]);
+
+      expect($("#snix ul").children().length).toBe(2);
+      
+      expect($("#snix ul li:nth-child(1)").attr("data-id")).toBe("1");
+      expect($("#snix ul li:nth-child(1) span").text()).toBe("e1");
+
+      expect($("#snix ul li:nth-child(2)").attr("data-id")).toBe("2");
+      expect($("#snix ul li:nth-child(2) span").text()).toBe("e2");
+
+      app.entries.remove(e2);
+
+      expect($("#snix ul").children().length).toBe(1);
+
+      expect($("#snix ul li:nth-child(1)").attr("data-id")).toBe("1");
+      expect($("#snix ul li:nth-child(1) span").text()).toBe("e1");
+
+      app.entries.add({id: 3, name: 'e3'});
+
+      expect($("#snix ul").children().length).toBe(2);
+
+      expect($("#snix ul li:nth-child(1)").attr("data-id")).toBe("1");
+      expect($("#snix ul li:nth-child(1) span").text()).toBe("e1");
+
+      expect($("#snix ul li:nth-child(2)").attr("data-id")).toBe("3");
+      expect($("#snix ul li:nth-child(2) span").text()).toBe("e3");
+    });
+
   });
 
 });
