@@ -1,7 +1,7 @@
 About
 ====
 
-Snix is JavaScript library that helps you to create ambitious web applications. It is built around the "Reactive programming" paradigm and is heavily influenced by frameworks like Backbone, Knockout and Ember.
+Snix is a JavaScript library that helps you to create ambitious web applications. It is built around the "Reactive programming" paradigm and is heavily influenced by frameworks like Backbone, Knockout and Ember.
 
 Features
 ====
