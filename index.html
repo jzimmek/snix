@@ -4,6 +4,11 @@
   <script type="text/javascript" src="vendor/jquery-1.7.1.min.js"></script>  
   <script type="text/javascript" src="vendor/underscore.js"></script>
   <script type="text/javascript" src="vendor/moment.min.js"></script>
+  <style type="text/css">
+    .error {
+      border: 1px solid orange;
+    }
+  </style>
   <!--[if lt IE 9]>
     <script type="text/javascript" src="vendor/json2.js"></script>
   <![endif]-->
@@ -21,6 +26,27 @@
       this.selectedTodos = s.array();
       this.selectedTodo = s.val(null);
       this.today = s.val(moment());
+
+      this.loginForm = new function(){
+        this.email = s.val("");
+
+        this.validator = s.validator();
+
+        this.exec = function(){
+
+          this.validator.validate({
+            email: function(){
+              return this.email() != null && this.email().length > 3;
+            }
+          }, this);
+
+          if(this.validator.isEmpty()){
+            console.info("valid");
+          }else{
+            console.info("invalid");
+          }
+        };
+      };
     };
 
     $(function(){
@@ -59,7 +85,11 @@
     </li>
   </ul>
 
-  <!--div data-bind="date: {moment: @today}"></div-->
+  <form>
+    <label data-bind="error: @loginForm.validator.field('email')">email</label>
+    <input type="text" data-bind="value: @loginForm.email"/>
+    <button data-bind="click: @loginForm.exec()">login</button>
+  </form>
 
 </body>
 </html>
