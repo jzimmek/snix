@@ -121,6 +121,19 @@ describe("Snix", function(){
     expect(Snix.unwrap(100)).toBe(100);
   });
 
+  it("serialiazes to the underlying value in JSON.stringified", function(){
+    var v1 = new Snix.Value(100);
+    var f1 = v1.fun();
+
+    expect(JSON.stringify(f1)).toBe("100");
+
+    var f2 = Snix.compute(function(){
+      return f1() * 2;
+    });
+
+    expect(JSON.stringify(f2)).toBe("200");
+  });
+
   describe("Value", function(){
 
     it("can not be created without passing a valueProvider", function(){
