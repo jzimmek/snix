@@ -14,9 +14,7 @@
   <![endif]-->
   <script type="text/javascript" src="lib/snix.js"></script>
   <script type="text/javascript">
-    var s = Snix;
-
-    var app = new function(){
+    var app = Snix.app(function(s){
       this.name = s.val("joe");
       this.todos = s.array([
         {id: _.uniqueId(), prio: s.val("high 1")},
@@ -47,10 +45,6 @@
           }
         };
       };
-    };
-
-    $(function(){
-      s.Binding.binden(app, $("body")[0]);
     });
   </script>
 </head>
@@ -90,6 +84,8 @@
     <input type="text" data-bind="value: @loginForm.email"/>
     <button data-bind="click: @loginForm.exec()">login</button>
   </form>
+
+  <div data-bind="date: {moment: @today}"></div>
 
 </body>
 </html>
