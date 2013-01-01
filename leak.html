@@ -24,32 +24,21 @@
 
     var app = Snix.app(function(s){
 
+      var num = s.compute(function(){
+        var u = this.user();
+
+        if(!u)
+          return -1;
+
+        return u.id() % 17;
+      }, this);
+
       this.user = s.val(null);
-      // this.num = s.compute(function(){
-      //   var u = this.user();
-
-      //   if(!u)
-      //     return -1;
-
-      //   return u.id() % 17;
-      // }, this);
 
       this.createUsers = function(){
-
-        var num = s.compute(function(){
-          var u = this.user();
-
-          if(!u)
-            return -1;
-
-          return u.id() % 17;
-        }, this);
-
-        for(var i=0; i < 10000; i++){
-
-          if(this.user() != null)
-            this.user().release();
-
+        for(var i=0; i < 2000; i++){
+          // if(this.user() != null)
+          //   this.user().release();
           this.user(new User(i));
           num();
         }

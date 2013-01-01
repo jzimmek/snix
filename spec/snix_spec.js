@@ -156,7 +156,6 @@ describe("Snix", function(){
     it("initialized its attributes", function(){
       var v = new Snix.Value(10);
       expect(v.dependants).toEqual([]);
-      expect(v.dependencies).toEqual([]);
       expect(v.isValueAssigned).toBeFalsy();
       expect(v.value).toBeNull();
       expect(v.valueProvider).toBe(10);
@@ -169,29 +168,26 @@ describe("Snix", function(){
       }).provideValue()).toBe(100);
     });
 
-    it("if Snix.__caller__ is set, it will be added as dependency if it is not already added and this will be added as dependency to Snix.__caller__", function(){
+    it("if Snix.__caller__ is set, it will be added to the dependants list of this", function(){
       var v = new Snix.Value(10);
 
       v.trackCaller();
       expect(v.dependants).toEqual([]);
-      expect(v.dependencies).toEqual([]);
 
       try{
-        Snix.__caller__ = {dependencies: []};
+        Snix.__caller__ = {};
   
         v.trackCaller();
         expect(v.dependants).toEqual([Snix.__caller__]);
-        expect(Snix.__caller__.dependencies).toEqual([v]);
 
         v.trackCaller();
         expect(v.dependants).toEqual([Snix.__caller__]); // no duplicates will be added
-        expect(Snix.__caller__.dependencies).toEqual([v]);
       }finally{
         Snix.__caller__ = null;
       }
     });
 
-    it("removes this dependencies and dependants on dispose", function(){
+    it("clears out dependants on dispose", function(){
       var v = new Snix.Value(10);
 
       var x = new Snix.Value(function(){
@@ -202,11 +198,10 @@ describe("Snix", function(){
           Snix.__caller__ = null;
         }
       });
-      expect(v.dependants).toEqual([]);
-      x.get();
+      expect(v.dependants).toEqual([]); // x() has not evaluated yet (lazy)
 
+      x.get();
       expect(v.dependants).toEqual([x]);
-      expect(x.dependencies).toEqual([v]);
 
       var y = new Snix.Value(function(){
         try{
@@ -216,22 +211,13 @@ describe("Snix", function(){
           Snix.__caller__ = null;
         }
       });
-      expect(v.dependants).toEqual([x]);
-      
+      expect(v.dependants).toEqual([x]); //y() has not evaluated yet (lazy)
+
       y.get();
-
       expect(v.dependants).toEqual([x, y]);
-      expect(y.dependencies).toEqual([v]);
 
-      y.dispose();
-
-      expect(v.dependants).toEqual([x]);
-      expect(y.dependencies).toEqual([]);
-
-      x.dispose();
-
+      v.dispose();
       expect(v.dependants).toEqual([]);
-      expect(x.dependencies).toEqual([]);
     });
 
     it("releases this when passing true as argument to dispose", function(){
@@ -239,7 +225,6 @@ describe("Snix", function(){
       v.dispose(true);
 
       expect(v.dependants).toBeNull();
-      expect(v.dependencies).toBeNull();
       expect(v.isValueAssigned).toBeNull();
       expect(v.value).toBeNull();
       expect(v.valueProvider).toBeNull();
@@ -356,9 +341,6 @@ describe("Snix", function(){
     expect(arr.__value__.dependants.length).toBe(1);
     expect(_.include(arr.__value__.dependants, c.__value__)).toBeTruthy();
 
-    expect(c.__value__.dependencies.length).toBe(1);
-    expect(_.include(c.__value__.dependencies, arr.__value__)).toBeTruthy();
-
     expect(c()).toEqual([]);
 
     arr([
@@ -367,17 +349,9 @@ describe("Snix", function(){
 
     expect(c()).toEqual([]);
 
-    expect(c.__value__.dependencies.length).toBe(2);
-    expect(_.include(c.__value__.dependencies, arr.__value__)).toBeTruthy();
-    expect(_.include(c.__value__.dependencies, arr()[0].active.__value__)).toBeTruthy();
-
     arr()[0].active(true);
 
     expect(c()).toEqual([arr()[0]]);
-
-    expect(c.__value__.dependencies.length).toBe(2);
-    expect(_.include(c.__value__.dependencies, arr.__value__)).toBeTruthy();
-    expect(_.include(c.__value__.dependencies, arr()[0].active.__value__)).toBeTruthy();
   });
 
   describe("Bindings", function(){
