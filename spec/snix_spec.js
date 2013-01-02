@@ -165,6 +165,7 @@ describe("Snix", function(){
       expect(v.isValueAssigned).toBeFalsy();
       expect(v.value).toBeNull();
       expect(v.valueProvider).toBe(10);
+      expect(v.isDisposed).toBeFalsy();
     });
 
     it("returns valueProvider as is or invokes valueProvider if it is an function and returns the result", function(){
@@ -224,6 +225,7 @@ describe("Snix", function(){
 
       v.dispose();
       expect(v.dependants).toEqual([]);
+      expect(v.isDisposed).toBeTruthy();
     });
 
     it("releases this when passing true as argument to dispose", function(){
