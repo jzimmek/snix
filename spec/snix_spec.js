@@ -132,6 +132,12 @@ describe("Snix", function(){
     });
 
     expect(JSON.stringify(f2)).toBe("200");
+
+    var enu = Snix.enu("joe", "bob");
+    expect(JSON.stringify(enu("joe"))).toBe('"joe"');
+
+    // calls toJSON on underlying value if exists
+    expect(JSON.stringify(Snix.val(enu("joe")))).toBe('"joe"');
   });
 
   describe("Value", function(){
