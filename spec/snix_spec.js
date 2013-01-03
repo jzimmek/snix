@@ -224,7 +224,7 @@ describe("Snix", function(){
       expect(v.dependants).toEqual([x, y]);
 
       v.dispose();
-      expect(v.dependants).toEqual([]);
+      expect(v.dependants).toEqual();
       expect(v.isDisposed).toBeTruthy();
     });
 
@@ -315,6 +315,36 @@ describe("Snix", function(){
       var obj = {};
       expect(new Snix.Value(10).convert(obj)).toBe(obj);
     });
+  });
+
+  it("can add subscribers", function(){
+    var v = Snix.val(10);
+
+    var expectedValue = 10;
+
+    var obj = {
+      fun: function(newValue){
+        expect(v()).toBe(expectedValue);
+        expect(newValue).toBe(expectedValue);
+      }
+    };
+
+    spyOn(obj, "fun").andCallThrough();
+
+    v.subscribe(obj.fun, obj);
+
+    expect(obj.fun).toHaveBeenCalled();
+    obj.fun.reset();
+
+    expectedValue = 100;
+    v(100);
+    expect(obj.fun).toHaveBeenCalled();
+
+    obj.fun.reset();
+    v.unsubscribe(obj.fun);
+
+    v(200);
+    expect(obj.fun).not.toHaveBeenCalled();
   });
 
   it("computes some nested values", function(){
