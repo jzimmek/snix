@@ -399,6 +399,7 @@ describe("Snix", function(){
 
     it("select", function(){
       var app = {};
+      app.selectedEntry = Snix.val();
       app.entries = Snix.array([
         {id: 1, name: 'e1'},
         {id: 2, name: 'e2'}
@@ -406,11 +407,21 @@ describe("Snix", function(){
 
       // app.entries();
 
-      $("#snix").append("<select data-bind=\"select: {entries: @entries, label: 'name'}\"></select>")
+      $("#snix").append("<select data-bind=\"select: {entries: @entries, label: 'name', selected: @selectedEntry}\"></select>")
 
       Snix.Binding.binden(app, $("#snix")[0]);
 
       expect($("#snix option").length).toBe(3); // 2 entries + 1 caption
+
+      expect(app.selectedEntry()).toBeNull();
+
+      expect($("#snix option:selected").attr("value")).toBe("-1");
+
+      app.selectedEntry(app.entries()[1]);
+      expect($("#snix option:selected").attr("value")).toBe("2");
+
+      app.selectedEntry(null);
+      expect($("#snix option:selected").attr("value")).toBe("-1");
     });
 
     it("text", function(){
