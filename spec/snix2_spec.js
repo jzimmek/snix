@@ -48,6 +48,27 @@ describe("Snix", function(){
 
         expect(v.convert).toHaveBeenCalledWith(100);
       });
+
+      it("sets a new value only if it differs from the current value", function(){
+        var v = Snix.val();
+        
+        spyOn(v, "isDifferentValue").andReturn(true);
+        v(1);
+        expect(v.isDifferentValue).toHaveBeenCalledWith(1);
+        expect(v()).toBe(1);
+      });
+
+      it("does not update the underlying value if isDifferentValue returns false", function(){
+        var v = Snix.val();
+
+        v(2);
+
+        spyOn(v, "isDifferentValue").andReturn(false);
+
+        v(3);
+        expect(v.isDifferentValue).toHaveBeenCalledWith(3);
+        expect(v()).toBe(2);
+      });
     });
 
     describe("events", function(){
@@ -87,6 +108,91 @@ describe("Snix", function(){
 
     });
 
+
+  });
+
+  describe("compute", function(){
+    it("can be sorted", function(){
+
+      var e1 = {name: "joe"};
+      var e2 = {name: "bob"};
+
+      var arr = Snix.array([e1, e2]);
+
+      arr.sort("name");
+
+      expect(arr()[0]).toBe(e2);
+      expect(arr()[1]).toBe(e1);
+
+      // switch ordering
+      arr.sort("name");
+
+      expect(arr()[0]).toBe(e1);
+      expect(arr()[1]).toBe(e2);
+
+    });
+  });
+
+  describe("compute", function(){
+
+    it("returns a function", function(){
+      var c = Snix.compute(function(set){
+      }, {}, {});
+      expect(typeof(c)).toBe("function")
+    });
+
+    it("evaluates the passed function as sets the return value as value", function(){
+      var c = Snix.compute(function(set){
+        set(1);
+      }, {}, {});
+      expect(c()).toBe(1);
+    });
+
+    it("it lazily evaluates the passed function", function(){
+      var cnt = 0;
+      var c = Snix.compute(function(set){
+        cnt++;
+        set(10);
+      }, {}, {});
+
+      expect(cnt).toBe(0);
+      expect(c()).toBe(10);
+      expect(cnt).toBe(1);
+    });
+
+    it("evaluates the passed function once and memoize the result", function(){
+      var cnt = 0;
+      var c = Snix.compute(function(set){
+        cnt++;
+        set(10);
+      }, {}, {});
+
+      expect(c()).toBe(10);
+      expect(cnt).toBe(1);
+
+      expect(c()).toBe(10);
+      expect(cnt).toBe(1);
+    });
+
+    it("does fail on write attempts", function(){
+      var c = Snix.compute(null, {}, {});
+
+      expect(function(){
+        c(100);
+      }).toThrow("compute not writable");
+    });
+
+    it("triggers a snix refresh on any value change", function(){
+      var app = {};
+
+      var c = Snix.compute(function(set){
+        return set(1);
+      }, {}, app);
+
+      spyOn(Snix, "refresh");
+      c();
+      expect(Snix.refresh).toHaveBeenCalledWith(app);
+    });
 
   });
 
