@@ -92,18 +92,17 @@ describe("Snix", function(){
         expect(listener).toHaveBeenCalledWith(200, 100);
       });
 
-      it("invokes read-listener before returning the underlying value", function(){
-        var listener = jasmine.createSpy("read listener");
-        var v = Snix.val().on("read", listener);
+      it("fires one events only once", function(){
+        var listener = jasmine.createSpy("change listener");
+        var v = Snix.val().one("change", listener);
 
-        v();
-        expect(listener).toHaveBeenCalledWith(null);
+        v(100);
+        expect(listener).toHaveBeenCalledWith(100, null);
 
         listener.reset();
 
-        v(100);
-        v();
-        expect(listener).toHaveBeenCalledWith(100);
+        v(200);
+        expect(listener).not.toHaveBeenCalledWith();
       });
 
     });
@@ -111,7 +110,7 @@ describe("Snix", function(){
 
   });
 
-  describe("compute", function(){
+  describe("array", function(){
     it("can be sorted", function(){
 
       var e1 = {name: "joe"};
@@ -182,18 +181,59 @@ describe("Snix", function(){
       }).toThrow("compute not writable");
     });
 
-    it("triggers a snix refresh on any value change", function(){
-      var app = {};
-
+    it("notify", function(){
+      var v = Snix.val(10);
       var c = Snix.compute(function(set){
-        return set(1);
-      }, {}, app);
+        set(v() * 2);
+      });
 
-      spyOn(Snix, "refresh");
-      c();
-      expect(Snix.refresh).toHaveBeenCalledWith(app);
+      expect(c()).toBe(20);
+
+      v.notify(c);
+      v(20);
+
+      expect(c()).toBe(40);
     });
 
+    it("subscribe", function(){
+      var v = Snix.val(10);
+      var c = Snix.compute(function(set){
+        set(v() * 2);
+      });
+
+      expect(c()).toBe(20);
+
+      c.subscribe(v);
+      v(20);
+
+      expect(c()).toBe(40);
+
+    });
+
+    it("subscribeObject", function(){
+      var v = Snix.val(10);
+      var v2 = Snix.val(10);
+
+      var c = Snix.compute(function(set){
+        set(v() * v2());
+      });
+
+      expect(c()).toBe(100);
+
+      c.subscribeObject({v: v, v2: v2});
+
+      v(20);
+      expect(c()).toBe(200);
+
+      v2(20);
+      expect(c()).toBe(400);
+
+    });
+
+  });
+
+  describe("filter", function(){
+    
   });
 
   describe("utils", function(){
