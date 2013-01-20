@@ -79,7 +79,7 @@ describe("Snix", function(){
 
         // should fire because initial value is NULL and 100 is different
         v(100);
-        expect(listener).toHaveBeenCalledWith(v, 100, null);
+        expect(listener).toHaveBeenCalledWith(100, null);
 
         listener.reset();
 
@@ -89,7 +89,7 @@ describe("Snix", function(){
 
         // should call listener because newValue != oldValue 
         v(200);
-        expect(listener).toHaveBeenCalledWith(v, 200, 100);
+        expect(listener).toHaveBeenCalledWith(200, 100);
       });
 
       it("fires one events only once", function(){
@@ -100,7 +100,7 @@ describe("Snix", function(){
         
         v(100);
 
-        expect(listener).toHaveBeenCalledWith(v, 100, null);
+        expect(listener).toHaveBeenCalledWith(100, null);
         expect(v.changeListener.length).toBe(0);
       });
 
