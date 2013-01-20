@@ -79,7 +79,7 @@ describe("Snix", function(){
 
         // should fire because initial value is NULL and 100 is different
         v(100);
-        expect(listener).toHaveBeenCalledWith(100, null);
+        expect(listener).toHaveBeenCalledWith(v, 100, null);
 
         listener.reset();
 
@@ -89,20 +89,19 @@ describe("Snix", function(){
 
         // should call listener because newValue != oldValue 
         v(200);
-        expect(listener).toHaveBeenCalledWith(200, 100);
+        expect(listener).toHaveBeenCalledWith(v, 200, 100);
       });
 
       it("fires one events only once", function(){
         var listener = jasmine.createSpy("change listener");
         var v = Snix.val().one("change", listener);
 
+        expect(v.changeListener.length).toBe(1);
+        
         v(100);
-        expect(listener).toHaveBeenCalledWith(100, null);
 
-        listener.reset();
-
-        v(200);
-        expect(listener).not.toHaveBeenCalledWith();
+        expect(listener).toHaveBeenCalledWith(v, 100, null);
+        expect(v.changeListener.length).toBe(0);
       });
 
     });
@@ -129,6 +128,20 @@ describe("Snix", function(){
       expect(arr()[0]).toBe(e1);
       expect(arr()[1]).toBe(e2);
 
+    });
+  });
+
+  describe("enu", function(){
+    it("looks up an enu entry", function(){
+      var enu = Snix.enu("e1", "e2");
+
+      var e1 = enu("e1");
+
+      expect(e1.name).toBe("e1");
+
+      var e11 = enu(e1);
+
+      expect(e11.name).toBe("e1");
     });
   });
 
@@ -181,20 +194,6 @@ describe("Snix", function(){
       }).toThrow("compute not writable");
     });
 
-    it("notify", function(){
-      var v = Snix.val(10);
-      var c = Snix.compute(function(set){
-        set(v() * 2);
-      });
-
-      expect(c()).toBe(20);
-
-      v.notify(c);
-      v(20);
-
-      expect(c()).toBe(40);
-    });
-
     it("subscribe", function(){
       var v = Snix.val(10);
       var c = Snix.compute(function(set){
@@ -233,7 +232,7 @@ describe("Snix", function(){
   });
 
   describe("filter", function(){
-    
+
   });
 
   describe("utils", function(){
