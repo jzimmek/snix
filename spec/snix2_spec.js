@@ -232,7 +232,73 @@ describe("Snix", function(){
   });
 
   describe("filter", function(){
+    it("can filter by like", function(){
+      var filter = new Snix.Filter({
+        name: "like"
+      });
 
+      var arr = Snix.array();
+      arr.add({id: 1, name: "joe"});
+      arr.add({id: 2, name: "bob"});
+
+      var filtered = filter.filter(arr);
+
+      expect(filtered.length).toBe(2);
+
+      filter.name("joe");
+
+      filtered = filter.filter(arr);
+
+      expect(filtered.length).toBe(1);    
+      expect(filtered[0]).toBe(arr()[0]);
+    });
+
+    it("can filter by in", function(){
+      var filter = new Snix.Filter({
+        name: "in"
+      });
+
+      var arr = Snix.array();
+      arr.add({id: 1, name: "joe"});
+      arr.add({id: 2, name: "bob"});
+
+      var filtered = filter.filter(arr);
+
+      expect(filtered.length).toBe(2);
+
+      filter.name(["joe"]);
+
+      filtered = filter.filter(arr);
+
+      expect(filtered.length).toBe(1);    
+      expect(filtered[0]).toBe(arr()[0]);
+    });
+
+
+    // it("can filter by enu", function(){
+    //   var filter = new Snix.Filter({
+    //     name: function(values, e){
+    //       return _.include(_.pluck(values, "name"), e.name);
+    //     }
+    //   });
+
+    //   var names = Snix.enu("joe", "bob");
+
+    //   var arr = Snix.array();
+    //   arr.add({id: 1, name: "joe"});
+    //   arr.add({id: 2, name: "bob"});
+
+    //   var filtered = filter.filter(arr);
+
+    //   expect(filtered.length).toBe(2);
+
+    //   filter.name([Snix.enu("joe")]);
+
+    //   filtered = filter.filter(arr);
+
+    //   expect(filtered.length).toBe(1);
+
+    // });
   });
 
   describe("utils", function(){
