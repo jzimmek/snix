@@ -129,6 +129,28 @@ describe("Snix", function(){
       expect(arr()[1]).toBe(e2);
 
     });
+
+    it("triggers a change event on sorting", function(){
+      var joe = {name:"joe"}, bob = {name:"bob"};
+      var arr = Snix.array([joe, bob]);
+
+      var c = Snix.compute(function(set){
+        set(_.pluck(arr(),"name").join(","));
+      }).subscribe(arr);
+
+      expect(c()).toBe("joe,bob");
+
+      arr.sort("name");
+
+      expect(c()).toBe("bob,joe");
+    });
+
+    it("fails when calling sort without an attribute to sort on", function(){
+      expect(function(){
+        Snix.array().sort()
+      }).toThrow("missing sort attribute");
+    });
+
   });
 
   describe("enu", function(){
@@ -143,6 +165,27 @@ describe("Snix", function(){
 
       expect(e11.name).toBe("e1");
     });
+  });
+
+  describe("accessor", function(){
+
+    it("evaluate an expression", function(){
+      var app = {
+        name: Snix.val()
+      };
+
+      var acc = Snix.accessor("@name", app, {});
+
+      expect(acc()()).toBeNull();
+      expect(acc()("joe")()).toBe("joe");
+      expect(app.name()).toBe("joe");
+
+      app.name = Snix.val();
+      expect(acc()()).toBeNull();
+      expect(acc()("bob")()).toBe("bob");
+      expect(app.name()).toBe("bob");
+    });
+
   });
 
   describe("compute", function(){
