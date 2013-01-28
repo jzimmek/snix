@@ -6,7 +6,10 @@
   <script type="text/javascript" src="vendor/moment.min.js"></script>
   <style type="text/css">
     .error {
-      border: 1px solid orange;
+      border: 1px solid red;
+    }
+    .highlight {
+      background: yellow;
     }
   </style>
   <!--[if lt IE 9]>
@@ -14,78 +17,92 @@
   <![endif]-->
   <script type="text/javascript" src="lib/snix.js"></script>
   <script type="text/javascript">
-    var app = Snix.app(function(s){
-      this.name = s.val("joe");
-      this.todos = s.array([
-        {id: _.uniqueId(), prio: s.val("high 1")},
-        {id: _.uniqueId(), prio: s.val("high 2")},
-        {id: _.uniqueId(), prio: s.val("high 3")}
+
+    var enuPrios = Snix.enu("low", "normal", "high");
+
+    var Todo = function(name){
+      this.id = Snix.val(_.uniqueId());
+
+      this.name = Snix.val(name);
+      // this.name = Snix.val(name).on("read", function(xy){
+      //   console.info("reading name: "+xy);
+      // });
+      this.done = Snix.boolean(false);
+      this.prio = Snix.val(enuPrios("normal"));
+      this.due = Snix.moment(moment());
+      this.info = Snix.val("<div><b>xxy</b><input type='text' data-bind='value: @firstname'/></div>");
+    };
+
+    var app = new function(){
+      this.firstname = Snix.val("jan");
+      this.todos = Snix.array([
+        new Todo("todos 1"),
+        new Todo("todos 2"),
+        new Todo("todos 3")
       ]);
-      this.selectedTodos = s.array();
-      this.selectedTodo = s.val(null);
-      this.today = s.val(moment());
 
-      this.loginForm = new function(){
-        this.email = s.val("");
-
-        this.validator = s.validator();
-
+      this.createTodo = new function(){
+        this.name = Snix.val();
+        this.validator = Snix.validator();
         this.exec = function(){
 
           this.validator.validate({
-            email: function(){
-              return this.email() != null && this.email().length > 3;
+            name: function(){
+              return this.name() && this.name().length > 3;
             }
           }, this);
 
           if(this.validator.isEmpty()){
-            console.info("valid");
-          }else{
-            console.info("invalid");
+            app.todos.add(new Todo(this.name()));
           }
+
         };
       };
+    };
+
+    $(function(){
+      Snix.refresh(app);
     });
   </script>
 </head>
 <body>
 
-  <span data-bind="text: @name"></span>
-  <input type="text" data-bind="value: @name"/>
-  <a href="#" data-bind="click: @todos.add({id: _.uniqueId(), prio: s.val('bllll')})">create</a>
+  <span data-bind="text: @firstname">xxx</span>
+  <input type="text" data-bind="value: @firstname"/>
 
   <ul data-bind="loop: {entries: @todos, as: 'todo'}">
-    <li>
-      <span data-bind="text: todo.name"></span>
-      <input type="text" data-bind="value: @name"/>
-      <span data-bind="text: todo.prio"></span>
-      <input type="text" data-bind="value: todo.prio"/>
-      <a href="#" data-bind="click: @todos.remove(todo)">delete</a>
-    </li>
-  </ul>
-
-  <select data-bind="select: {entries: @todos, label: 'prio', selected: @selectedTodos, multiple: true}" size="6"></select>
-  <select data-bind="select: {entries: @todos, label: 'prio', selected: @selectedTodo}"></select>
-
-
-  <h3>selectedTodos</h3>
-  <ul data-bind="loop: {entries: @selectedTodos, as: 'todo'}">
-    <li>
-      <span data-bind="text: todo.name"></span>
-      <input type="text" data-bind="value: @name"/>
-      <span data-bind="text: todo.prio"></span>
-      <input type="text" data-bind="value: todo.prio"/>
-      <a href="#" data-bind="click: @todos.remove(todo)">delete</a>
+    <li data-bind="css: {highlight: todo.done}; style: {'border': (todo.done() ? '1px solid red' : '')}">
+      <form>
+        <input type="checkbox" data-bind="check: todo.done"/>
+        <span data-bind="text: todo.name"></span>
+        <input type="text" data-bind="value: @firstname"/>
+        <input type="radio" name="prio" data-bind="radio: {entries: enuPrios, entry: enuPrios('low'), selected: todo.prio}"/> low
+        <input type="radio" name="prio" data-bind="radio: {entries: enuPrios, entry: enuPrios('normal'), selected: todo.prio}"/> normal
+        <input type="radio" name="prio" data-bind="radio: {entries: enuPrios, entry: enuPrios('high'), selected: todo.prio}"/> high
+        <select data-bind="select: {entries: enuPrios, selected: todo.prio}"></select>
+        <div data-bind="radioset: {entries: enuPrios, selected: todo.prio}"></div>
+        <div data-bind="date: {moment: todo.due}"></div>
+        <div data-bind="html: todo.info"></div>
+        <div data-bind="datetime: {moment: todo.due}"></div>
+        <a href="#" data-bind="click: @todos.remove(todo)">delete</a>
+      </form>
     </li>
   </ul>
 
   <form>
-    <label data-bind="error: @loginForm.validator.field('email')">email</label>
-    <input type="text" data-bind="value: @loginForm.email"/>
-    <button data-bind="click: @loginForm.exec()">login</button>
+    <input type="text" data-bind="value: @createTodo.name; error: @createTodo.validator.field('name')"/>
+    <a href="#" data-bind="click: @createTodo.exec()">create</a>
   </form>
 
-  <div data-bind="date: {moment: @today}"></div>
+  <div data-bind="toggle: @todos.size() > 3">
+    <h1>xxxx</h1>
+    <input type="text" data-bind="value: @firstname"/>
+  </div>
+
+  <div data-bind="visible: @todos.size() > 3">
+    <h1>yyyy</h1>
+    <input type="text" data-bind="value: @firstname"/>
+  </div>
 
 </body>
 </html>
