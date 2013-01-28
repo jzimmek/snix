@@ -2,24 +2,31 @@
 
 [ -d dist ] || mkdir dist
 
-if [[ $VERSION = "" ]]; then
-  VERSION="latest"
-fi
+VERSION=`date +"%Y%m%d%H%M%S"`
+MODULES="snix filter compute record remote binding bindings"
 
-[ -f ./dist/snix.all-${VERSION}.min.js ] && rm ./dist/snix.all-${VERSION}.min.js
-[ -f ./dist/snix.all-${VERSION}.js ] && rm ./dist/snix.all-${VERSION}.js
+WORK_DIR=`pwd`
 
-FILES="snix snix.binding snix.ajax snix.record"
+FILENAME=snix-$VERSION.js
+FILENAME_MIN=snix-$VERSION.min.js
 
-for i in $FILES; do
-  [ -f ./dist/$i-${VERSION}.js ] && rm ./dist/$i-${VERSION}.js
-  cp ./lib/$i.js ./dist/$i-${VERSION}.js 
+FILE=$WORK_DIR/dist/$FILENAME
+FILE_MIN=$WORK_DIR/dist/$FILENAME_MIN
 
-  [ -f ./dist/$i-${VERSION}.min.js ] && rm ./dist/$i-${VERSION}.min.js
-  uglifyjs -o ./dist/$i-${VERSION}.min.js ./lib/$i.js
+touch $FILE
+
+for i in $MODULES; do
+  cat ./lib/$i.js >> $FILE
 done
 
-for i in $FILES; do
-  cat ./dist/$i-${VERSION}.min.js >> ./dist/snix.all-${VERSION}.min.js
-  cat ./dist/$i-${VERSION}.js >> ./dist/snix.all-${VERSION}.js
-done
+uglifyjs -o $FILE_MIN $FILE
+
+[ -L dist/snix-latest.js ] && rm dist/snix-latest.js
+[ -L dist/snix-latest.min.js ] && rm dist/snix-latest.min.js
+
+cd dist
+
+ln -s $FILENAME snix-latest.js
+ln -s $FILENAME_MIN snix-latest.min.js
+
+cd ..
