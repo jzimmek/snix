@@ -96,12 +96,12 @@ describe("Snix", function(){
         var listener = jasmine.createSpy("change listener");
         var v = Snix.val().one("change", listener);
 
-        expect(v.changeListener.length).toBe(1);
+        expect(v.__changeListener.length).toBe(1);
         
         v(100);
 
         expect(listener).toHaveBeenCalledWith(100, null);
-        expect(v.changeListener.length).toBe(0);
+        expect(v.__changeListener.length).toBe(0);
       });
 
     });
