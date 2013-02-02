@@ -164,6 +164,19 @@ describe("Snix", function(){
       var e11 = enu(e1);
 
       expect(e11.name).toBe("e1");
+
+    });
+
+    it("returns null when passed null as lookup argument", function(){
+      var enu = Snix.enu("e1", "e2");
+      expect(enu(null)).toBeNull();      
+    });
+
+    it("fails when a lookup argument can not be found in the enumeration", function(){
+      var enu = Snix.enu("e1", "e2");
+      expect(function(){
+        enu("e3");
+      }).toThrow("unknown in enumeration: e3");
     });
   });
 
