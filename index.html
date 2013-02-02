@@ -15,7 +15,7 @@
   <!--[if lt IE 9]>
     <script type="text/javascript" src="vendor/json2.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="lib/snix.js"></script>
+  <script type="text/javascript" src="dist/snix-latest.js"></script>
   <script type="text/javascript">
 
     var enuPrios = Snix.enu("low", "normal", "high");
@@ -43,7 +43,7 @@
 
       this.createTodo = new function(){
         this.name = Snix.val();
-        this.validator = Snix.validator();
+        this.validator = new Snix.Validator;
         this.exec = function(){
 
           this.validator.validate({
