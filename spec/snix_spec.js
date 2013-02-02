@@ -92,7 +92,7 @@ describe("Snix", function(){
         expect(listener).toHaveBeenCalledWith(200, 100);
       });
 
-      it("fires one events only once", function(){
+      it("fires one events only once and removes them afterwards", function(){
         var listener = jasmine.createSpy("change listener");
         var v = Snix.val().one("change", listener);
 
@@ -101,6 +101,16 @@ describe("Snix", function(){
         v(100);
 
         expect(listener).toHaveBeenCalledWith(100, null);
+        expect(v.__changeListener.length).toBe(0);
+      });
+
+      it("removes an event listener", function(){
+        var listener = jasmine.createSpy("change listener");
+        var v = Snix.val().on("change", listener);
+
+        expect(v.__changeListener.length).toBe(1);
+
+        v.off("change", listener);
         expect(v.__changeListener.length).toBe(0);
       });
 
