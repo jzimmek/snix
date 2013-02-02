@@ -317,6 +317,15 @@ describe("Snix", function(){
 
       expect(filtered.length).toBe(1);    
       expect(filtered[0]).toBe(arr()[0]);
+
+      
+      filter.name(""); // ignore empty string
+      filtered = filter.filter(arr);
+      expect(filtered.length).toBe(2);
+
+      filter.name(null); // ignore null
+      filtered = filter.filter(arr);
+      expect(filtered.length).toBe(2);
     });
 
     it("can filter by in", function(){
@@ -338,6 +347,15 @@ describe("Snix", function(){
 
       expect(filtered.length).toBe(1);    
       expect(filtered[0]).toBe(arr()[0]);
+
+
+      filter.name([]); // ignore empty array
+      filtered = filter.filter(arr);
+      expect(filtered.length).toBe(2);
+
+      filter.name(null); // ignore null
+      filtered = filter.filter(arr);
+      expect(filtered.length).toBe(2);
     });
 
     it("can filter by function", function(){
