@@ -3,7 +3,7 @@
 [ -d dist ] || mkdir dist
 
 VERSION=`date +"%Y%m%d%H%M%S"`
-MODULES="snix event rest array validator filter compute record remote binding bindings"
+MODULES="snix util event rest array validator filter compute record remote binding bindings"
 
 WORK_DIR=`pwd`
 
