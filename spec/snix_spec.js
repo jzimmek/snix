@@ -299,8 +299,8 @@ describe("Snix", function(){
 
   describe("filter", function(){
     it("can filter by like", function(){
-      var filter = new Snix.Filter({
-        name: "like"
+      var filter = new Snix.Filter(function(f){
+        f.isLike("name");
       });
 
       var arr = Snix.array();
@@ -320,8 +320,8 @@ describe("Snix", function(){
     });
 
     it("can filter by in", function(){
-      var filter = new Snix.Filter({
-        name: "in"
+      var filter = new Snix.Filter(function(f){
+        f.isIn("name");
       });
 
       var arr = Snix.array();
@@ -340,31 +340,35 @@ describe("Snix", function(){
       expect(filtered[0]).toBe(arr()[0]);
     });
 
+    it("can filter by function", function(){
+      var filter = new Snix.Filter(function(f){
+        f.is("age", function(val, input){
+          return parseInt(input.age,10) >= parseInt(val, 10);
+        });
+      });
 
-    // it("can filter by enu", function(){
-    //   var filter = new Snix.Filter({
-    //     name: function(values, e){
-    //       return _.include(_.pluck(values, "name"), e.name);
-    //     }
-    //   });
+      var arr = Snix.array();
+      arr.add({id: 1, name: "joe1", age: 30});
+      arr.add({id: 2, name: "joe2", age: 40});
+      arr.add({id: 3, name: "joe3", age: 50});
 
-    //   var names = Snix.enu("joe", "bob");
+      var filtered = filter.filter(arr);
+      expect(filtered.length).toBe(3);
 
-    //   var arr = Snix.array();
-    //   arr.add({id: 1, name: "joe"});
-    //   arr.add({id: 2, name: "bob"});
+      filter.age(30)
 
-    //   var filtered = filter.filter(arr);
+      filtered = filter.filter(arr);
+      expect(filtered.length).toBe(3);
 
-    //   expect(filtered.length).toBe(2);
+      filter.age(40)
 
-    //   filter.name([Snix.enu("joe")]);
+      filtered = filter.filter(arr);
+      expect(filtered.length).toBe(2);
 
-    //   filtered = filter.filter(arr);
+      expect(filtered[0]).toBe(arr()[1]);
+      expect(filtered[1]).toBe(arr()[2]);
+    });
 
-    //   expect(filtered.length).toBe(1);
-
-    // });
   });
 
   describe("utils", function(){
