@@ -562,4 +562,32 @@ describe("Snix", function(){
 
   });
 
+  describe("record", function(){
+
+    it("returns the record fields as json", function(){
+
+      var TestRecord = new Snix.Record("/testrecord", function(r){
+        r.moment("birthday");
+        r.val("name");
+        r.int("age");
+      });
+
+      var t1 = new TestRecord({});
+      t1.birthday("1950-01-01");
+
+      expect(t1.dataAsJSON()).toBe('{"birthday":"1949-12-31T23:00:00.000Z","name":"","age":0}');
+
+      t1.name("joe");
+      expect(t1.dataAsJSON()).toBe('{"birthday":"1949-12-31T23:00:00.000Z","name":"joe","age":0}');
+
+      t1.age("30");
+      expect(t1.dataAsJSON()).toBe('{"birthday":"1949-12-31T23:00:00.000Z","name":"joe","age":30}');
+
+      t1.name(null);
+      expect(t1.dataAsJSON()).toBe('{"birthday":"1949-12-31T23:00:00.000Z","name":null,"age":30}');
+
+    });
+
+  });
+
 });
