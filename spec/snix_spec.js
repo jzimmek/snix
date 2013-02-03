@@ -40,35 +40,35 @@ describe("Snix", function(){
         expect(v(100)).toBe(v);
       });
 
-      it("passes the new value through convert", function(){
-        var v = Snix.val();
+      // it("passes the new value through convert", function(){
+      //   var v = Snix.val();
 
-        spyOn(v, "convert").andCallThrough();
-        v(100);
+      //   spyOn(v, "convert").andCallThrough();
+      //   v(100);
 
-        expect(v.convert).toHaveBeenCalledWith(100);
-      });
+      //   expect(v.convert).toHaveBeenCalledWith(100);
+      // });
 
-      it("sets a new value only if it differs from the current value", function(){
-        var v = Snix.val();
+      // it("sets a new value only if it differs from the current value", function(){
+      //   var v = Snix.val();
         
-        spyOn(v, "isDifferentValue").andReturn(true);
-        v(1);
-        expect(v.isDifferentValue).toHaveBeenCalledWith(1);
-        expect(v()).toBe(1);
-      });
+      //   spyOn(v, "isDifferentValue").andReturn(true);
+      //   v(1);
+      //   expect(v.isDifferentValue).toHaveBeenCalledWith(1);
+      //   expect(v()).toBe(1);
+      // });
 
-      it("does not update the underlying value if isDifferentValue returns false", function(){
-        var v = Snix.val();
+      // it("does not update the underlying value if isDifferentValue returns false", function(){
+      //   var v = Snix.val();
 
-        v(2);
+      //   v(2);
 
-        spyOn(v, "isDifferentValue").andReturn(false);
+      //   spyOn(v, "isDifferentValue").andReturn(false);
 
-        v(3);
-        expect(v.isDifferentValue).toHaveBeenCalledWith(3);
-        expect(v()).toBe(2);
-      });
+      //   v(3);
+      //   expect(v.isDifferentValue).toHaveBeenCalledWith(3);
+      //   expect(v()).toBe(2);
+      // });
     });
 
     describe("events", function(){
@@ -120,6 +120,17 @@ describe("Snix", function(){
   });
 
   describe("array", function(){
+    it("fails when passing a value not being an array", function(){
+      expect(function(){
+        Snix.array(123);
+      }).toThrow("not an array");
+
+      expect(function(){
+        var arr = Snix.array();
+        arr(123);
+      }).toThrow("not an array");
+    });
+
     it("can be sorted", function(){
 
       var e1 = {name: "joe"};
