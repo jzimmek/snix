@@ -210,6 +210,8 @@ describe("Snix", function(){
 
       var acc = Snix.accessor("@name", app, {});
 
+      expect(typeof(acc)).toBe("function");
+
       expect(acc()()).toBeNull();
       expect(acc()("joe")()).toBe("joe");
       expect(app.name()).toBe("joe");
@@ -261,14 +263,6 @@ describe("Snix", function(){
 
       expect(c()).toBe(10);
       expect(cnt).toBe(1);
-    });
-
-    it("does fail on write attempts", function(){
-      var c = Snix.compute(null, {}, {});
-
-      expect(function(){
-        c(100);
-      }).toThrow("compute not writable");
     });
 
     it("subscribe", function(){
