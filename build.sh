@@ -13,7 +13,10 @@ FILENAME_MIN=snix-$VERSION.min.js
 FILE=$WORK_DIR/dist/$FILENAME
 FILE_MIN=$WORK_DIR/dist/$FILENAME_MIN
 
+echo -n $VERSION > ./VERSION
+
 touch $FILE
+echo "// ${VERSION}" >> $FILE
 
 for i in $MODULES; do
   cat ./lib/$i.js >> $FILE
