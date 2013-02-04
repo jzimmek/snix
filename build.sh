@@ -3,7 +3,23 @@
 [ -d dist ] || mkdir dist
 
 VERSION=`date +"%Y%m%d%H%M%S"`
-MODULES="snix util event rest array validator filter compute record remote binding bindings"
+MODULES=" snix \
+          type/boolean \
+          type/moment \
+          type/float \
+          type/int \
+          type/enu \
+          type/array \
+          util \
+          event \
+          rest \
+          validator \
+          filter \
+          compute \
+          record \
+          remote \
+          binding \
+          bindings"
 
 WORK_DIR=`pwd`
 
