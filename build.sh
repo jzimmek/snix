@@ -10,6 +10,7 @@ MODULES=" snix \
           type/int \
           type/enu \
           type/array \
+          type/string \
           util \
           event \
           rest \
