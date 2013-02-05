@@ -564,6 +564,125 @@ describe("Snix", function(){
 
   describe("record", function(){
 
+    describe("field tracking", function(){
+      it("returns true if the passed field is modified and not differs from loaded value (not yet persisted)", function(){
+        var TestRecord = new Snix.Record("/testrecord", function(r){
+          r.val("name");
+        });
+        
+        var t = new TestRecord({});
+
+        expect(t.isDirty("name")).toBeFalsy();
+        t.name("joe");
+        expect(t.isDirty("name")).toBeTruthy();
+      });
+
+      it("returns true if any field is modified and not differs from loaded value (not yet persisted)", function(){
+        var TestRecord = new Snix.Record("/testrecord", function(r){
+          r.val("name");
+        });
+        
+        var t = new TestRecord({});
+
+        expect(t.isDirty()).toBeFalsy();
+        t.name("joe");
+        expect(t.isDirty()).toBeTruthy();
+      });
+
+      it("reverts any modified field changes back to the initial or last known field value", function(){
+        var TestRecord = new Snix.Record("/testrecord", function(r){
+          r.val("name");
+        });
+        
+        var t = new TestRecord({});
+        t.name("joe");
+        t.revert();
+        expect(t.name()).toBe("");
+
+        var t2 = new TestRecord({}, {name: "joe"});
+        t2.name("bob");
+        t2.revert();
+        expect(t2.name()).toBe("joe");
+
+      });
+    });
+
+    describe("can apply operations", function(){
+
+      it("can duplicate if it has an id", function(){
+        var TestRecord = new Snix.Record("/testrecord", function(r){});
+        var t = new TestRecord({});
+
+        expect(t.canDuplicate()).toBeFalsy();
+
+        t.id(10);
+        expect(t.canDuplicate()).toBeTruthy();
+      });
+
+      it("can save if it has an id", function(){
+        var TestRecord = new Snix.Record("/testrecord", function(r){});
+        var t = new TestRecord({});
+
+        expect(t.canSave()).toBeFalsy();
+
+        t.id(10);
+        expect(t.canSave()).toBeTruthy();
+      });
+
+      it("can destroy if it has an id", function(){
+        var TestRecord = new Snix.Record("/testrecord", function(r){});
+        var t = new TestRecord({});
+
+        expect(t.canDestroy()).toBeFalsy();
+
+        t.id(10);
+        expect(t.canDestroy()).toBeTruthy();
+      });
+
+      it("can create if it has no id", function(){
+        var TestRecord = new Snix.Record("/testrecord", function(r){});
+        var t = new TestRecord({});
+
+        expect(t.canCreate()).toBeTruthy();
+
+        t.id(10);
+        expect(t.canCreate()).toBeFalsy();
+      });
+
+    });
+
+    describe("url", function(){
+
+      it("return the url to create a new record", function(){
+        // without parent
+        var TestRecord = new Snix.Record("/testrecord", function(r){});
+        var t = new TestRecord({});
+        expect(t.createUrl()).toBe("/testrecord");
+
+        t.id(10);
+
+        // with parent
+        var ChildTestRecord = new Snix.Record("/child", function(r){});
+        var c = new ChildTestRecord({}, null, t);
+        expect(c.createUrl()).toBe("/testrecord/10/child");
+      });
+
+      it("return the url for an existing record", function(){
+        // without parent
+        var TestRecord = new Snix.Record("/testrecord", function(r){});
+        var t = new TestRecord({});
+        t.id(10);
+        expect(t.url()).toBe("/testrecord/10");
+
+        // with parent
+        var ChildTestRecord = new Snix.Record("/child", function(r){});
+        var c = new ChildTestRecord({}, null, t);
+        c.id(20);
+        expect(c.url()).toBe("/testrecord/10/child/20");
+      });
+    });
+
+
     it("returns the record fields as json", function(){
 
       var TestRecord = new Snix.Record("/testrecord", function(r){
