@@ -564,6 +564,13 @@ describe("Snix", function(){
 
   describe("record", function(){
 
+    it("each record instance has a validator attribute", function(){
+        var TestRecord = new Snix.Record("/testrecord", function(r){});
+        var t = new TestRecord({});
+
+        expect(t.validator).not.toBeNull();     
+    });
+
     describe("field tracking", function(){
       it("returns true if the passed field is modified and not differs from loaded value (not yet persisted)", function(){
         var TestRecord = new Snix.Record("/testrecord", function(r){
@@ -607,7 +614,81 @@ describe("Snix", function(){
       });
     });
 
-    describe("can apply operations", function(){
+    describe("perform operation", function(){
+
+      describe("save", function(){
+
+        it("fails when not eligible", function(){
+          var TestRecord = new Snix.Record("/testrecord", function(r){});
+          var t = new TestRecord({});
+          
+          expect(function(){
+            t.save()
+          }).toThrow("illegal state");
+        });
+
+        it("returns undefined when validation failed", function(){
+          var TestRecord = new Snix.Record("/testrecord", function(r){});
+          var t = new TestRecord({});
+          t.id(100);
+
+          spyOn(t.validator, "isEmpty").andReturn(false);
+          expect(t.save()).toBeUndefined();
+        });
+
+      });
+
+      describe("create", function(){
+
+        it("fails when not eligible", function(){
+          var TestRecord = new Snix.Record("/testrecord", function(r){});
+          var t = new TestRecord({});
+          t.id(100);
+
+          expect(function(){
+            t.create()
+          }).toThrow("illegal state");
+        });
+
+        it("returns undefined when validation failed", function(){
+          var TestRecord = new Snix.Record("/testrecord", function(r){});
+          var t = new TestRecord({});
+
+          spyOn(t.validator, "isEmpty").andReturn(false);
+          expect(t.create()).toBeUndefined();
+        });
+
+      });
+
+      describe("destroy", function(){
+
+        it("fails when not eligible", function(){
+          var TestRecord = new Snix.Record("/testrecord", function(r){});
+          var t = new TestRecord({});
+          
+          expect(function(){
+            t.destroy()
+          }).toThrow("illegal state");
+        });
+
+      });
+
+      describe("duplicate", function(){
+
+        it("fails when not eligible", function(){
+          var TestRecord = new Snix.Record("/testrecord", function(r){});
+          var t = new TestRecord({});
+          
+          expect(function(){
+            t.duplicate()
+          }).toThrow("illegal state");
+        });
+
+      });
+
+    });
+
+    describe("is operation eligible", function(){
 
       it("can duplicate if it has an id", function(){
         var TestRecord = new Snix.Record("/testrecord", function(r){});
