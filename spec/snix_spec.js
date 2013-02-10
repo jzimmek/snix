@@ -40,14 +40,14 @@ describe("Snix", function(){
         expect(v(100)).toBe(v);
       });
 
-      // it("passes the new value through convert", function(){
-      //   var v = Snix.val();
+      it("passes the new value through convert", function(){
+        var v = Snix.val();
 
-      //   spyOn(v, "convert").andCallThrough();
-      //   v(100);
+        spyOn(v, "convert").andCallThrough();
+        v(100);
 
-      //   expect(v.convert).toHaveBeenCalledWith(100);
-      // });
+        expect(v.convert).toHaveBeenCalledWith(100);
+      });
 
       // it("sets a new value only if it differs from the current value", function(){
       //   var v = Snix.val();
@@ -220,6 +220,26 @@ describe("Snix", function(){
       expect(acc()()).toBeNull();
       expect(acc()("bob")()).toBe("bob");
       expect(app.name()).toBe("bob");
+    });
+
+    it("tracks the accessed values", function(){
+
+      var app = {
+        name: Snix.val("joe"),
+        age: Snix.int(50)
+      };
+
+      var acc = Snix.accessor("@name()", app, {});
+      expect(acc.accessedGuids).toEqual([]);
+
+      acc();
+      expect(acc.accessedGuids).toEqual([app.name.__guid__]);
+
+      acc = Snix.accessor("@name()+@age()", app, {});
+
+      acc();
+      expect(acc.accessedGuids).toEqual([app.name.__guid__, app.age.__guid__]);
+
     });
 
   });
@@ -484,6 +504,18 @@ describe("Snix", function(){
       expect($(el).html()).toBe("<b>joe</b>");
     });
 
+    it("nested data-bind elements", function(){
+      var app = {name: Snix.val("<b>joe</b>")};
+
+      var el = $("<div><div><span id='s1' data-bind='html: @name'></span></div></div>");
+      $("#snix").append(el);
+
+      Snix.refresh(app, $("#snix")[0]);
+
+      expect($("#s1").html()).toBe("<b>joe</b>");
+
+    });
+
     it("loop", function(){
       var entry1 = {id: 1, name: "entry1"};
       var entry2 = {id: 2, name: "entry2"};
@@ -498,45 +530,45 @@ describe("Snix", function(){
 
       Snix.refresh(app, $("#snix")[0]);
 
-      // expect($(el).children().length).toBe(2);
+      expect($(el).children().length).toBe(2);
 
-      // var child1 = $(el).children().toArray()[0];
-      // var child2 = $(el).children().toArray()[1];
+      var child1 = $(el).children().toArray()[0];
+      var child2 = $(el).children().toArray()[1];
 
-      // expect($(child1).attr("data-id")).toBe("1");
-      // expect($(child2).attr("data-id")).toBe("2");
+      expect($(child1).attr("data-id")).toBe("1");
+      expect($(child2).attr("data-id")).toBe("2");
 
-      // expect($("span", child1).text()).toBe("entry1");
-      // expect($("span", child2).text()).toBe("entry2");
+      expect($("span", child1).text()).toBe("entry1");
+      expect($("span", child2).text()).toBe("entry2");
 
-      // // remove an entry
+      // remove an entry
 
-      // app.entries.remove(entry1);
+      app.entries.remove(entry1);
 
-      // Snix.refresh(app, $("#snix")[0]);
+      Snix.refresh(app, $("#snix")[0]);
 
-      // expect($(el).children().length).toBe(1);
+      expect($(el).children().length).toBe(1);
 
-      // child1 = $(el).children().toArray()[0];
-      // expect($(child1).attr("data-id")).toBe("2");
-      // expect($("span", child1).text()).toBe("entry2");
+      child1 = $(el).children().toArray()[0];
+      expect($(child1).attr("data-id")).toBe("2");
+      expect($("span", child1).text()).toBe("entry2");
 
-      // // add an entry
+      // add an entry
 
-      // app.entries.add(entry1);
+      app.entries.add(entry1);
 
-      // Snix.refresh(app, $("#snix")[0]);
+      Snix.refresh(app, $("#snix")[0]);
 
-      // expect($(el).children().length).toBe(2);
+      expect($(el).children().length).toBe(2);
 
-      // child1 = $(el).children().toArray()[0];
-      // child2 = $(el).children().toArray()[1];
+      child1 = $(el).children().toArray()[0];
+      child2 = $(el).children().toArray()[1];
 
-      // expect($(child1).attr("data-id")).toBe("2");
-      // expect($(child2).attr("data-id")).toBe("1");
+      expect($(child1).attr("data-id")).toBe("2");
+      expect($(child2).attr("data-id")).toBe("1");
 
-      // expect($("span", child1).text()).toBe("entry2");
-      // expect($("span", child2).text()).toBe("entry1");
+      expect($("span", child1).text()).toBe("entry2");
+      expect($("span", child2).text()).toBe("entry1");
     });
 
     it("date", function(){
