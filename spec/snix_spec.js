@@ -222,25 +222,25 @@ describe("Snix", function(){
       expect(app.name()).toBe("bob");
     });
 
-    it("tracks the accessed values", function(){
+    // it("tracks the accessed values", function(){
 
-      var app = {
-        name: Snix.val("joe"),
-        age: Snix.int(50)
-      };
+    //   var app = {
+    //     name: Snix.val("joe"),
+    //     age: Snix.int(50)
+    //   };
 
-      var acc = Snix.accessor("@name()", app, {});
-      expect(acc.accessedGuids).toEqual([]);
+    //   var acc = Snix.accessor("@name()", app, {});
+    //   expect(acc.accessedGuids).toEqual([]);
 
-      acc();
-      expect(acc.accessedGuids).toEqual([app.name.__guid__]);
+    //   acc();
+    //   expect(acc.accessedGuids).toEqual([app.name.__guid__]);
 
-      acc = Snix.accessor("@name()+@age()", app, {});
+    //   acc = Snix.accessor("@name()+@age()", app, {});
 
-      acc();
-      expect(acc.accessedGuids).toEqual([app.name.__guid__, app.age.__guid__]);
+    //   acc();
+    //   expect(acc.accessedGuids).toEqual([app.name.__guid__, app.age.__guid__]);
 
-    });
+    // });
 
   });
 
@@ -478,7 +478,10 @@ describe("Snix", function(){
 
       expect($(el).val()).toBe("joe");
 
+      // Snix.refreshFun(function(){
       el.val("bob").trigger("change");
+      // }, this, app);
+
       expect(app.name()).toBe("bob");
     });
 
