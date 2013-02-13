@@ -77,16 +77,16 @@ var Snix = {};
     return this.value;
   };
 
-  var convert = function(val){
+  var defaultConvert = function(val){
     return val;
   };
 
-  var set = function(newValue){
-    var newValue = this.convert(newValue);
+  var set = function(newValue, convert){
+    var newValue = convert(newValue);
     if(this.value !== newValue){
       var oldValue = this.value;
       this.value = newValue;
-      this.trigger("change", [newValue, oldValue]);
+      this.trigger("change", newValue, oldValue);
     }
     return this;
   };
@@ -94,39 +94,43 @@ var Snix = {};
   var proto = {
     toJSON: toJSON,
     get: get,
-    set: set,
-    convert: convert
+    set: set
   };
 
-  Snix.shell = function(initial){
+  Snix.shell = function(initial, convert){
+    convert = convert || defaultConvert;
+
     var f = function(){
-      if(arguments.length > 0)  return f.set(arguments[0]);
+      if(arguments.length > 0)  return f.set(arguments[0], convert);
       else                      return f.get();
     };
 
-    this.Event.register(f, "change");
+    Snix.Event.register(f, "change");
 
-    f.value = (arguments.length > 0 ? initial : null);
+    f.value = convert(arguments.length > 0 ? initial : null);
     f.__unwrap__ = true;
 
     return _.extend(f, proto);
   };
+
+  Snix.val = Snix.shell;
 
 })();
 
 // util
 
 (function(){
-  Snix.idOf = function(any){
-    if(any == null)
-      throw "illegal argument";
-
-    return ((typeof(any) == "string" || typeof(any) == "number") ? any : this.unwrap(any.id)).toString();
+  Snix.unwrap = function(any){
+    return (any && any.__unwrap__) ? Snix.unwrap(any()) : any;
   };
 
-  Snix.unwrap = function(any){
-    return any && any.__unwrap__ ? this.unwrap(any()) : any;
-  };    
+  Snix.idOf = function(any){
+    if(any == null || any === undefined)
+      throw "illegal argument";
+
+    return ((typeof(any) == "string" || typeof(any) == "number") ? any : Snix.unwrap(any.id)).toString();
+  };
+
 })();
 
 // boolean
@@ -137,13 +141,9 @@ var Snix = {};
     return (val == null) ? null : (val == true || val == "true" || val == "yes");
   };
 
-  var proto = {
-    convert: convert
-  };
-
   Snix.boolean = function(value){
     value = arguments.length > 0 ? value : null;
-    return _.extend(this.shell(value), proto);
+    return Snix.shell(value, convert);
   };
 
 })();
@@ -199,13 +199,9 @@ var Snix = {};
     return (val == null) ? null : parseFloat(val);
   };
 
-  var proto = {
-    convert: convert
-  };
-
   Snix.float = function(value){
     value = arguments.length > 0 ? value : null;
-    return _.extend(this.shell(value), proto);
+    return Snix.shell(value, convert);
   };
   
 })();
@@ -218,13 +214,9 @@ var Snix = {};
     return (val == null) ? null : parseInt(val, 10);
   };
 
-  var proto = {
-    convert: convert
-  };
-
   Snix.int = function(value){
     value = arguments.length > 0 ? value : null;
-    return _.extend(this.shell(value), proto);
+    return Snix.shell(value, convert);
   };
   
 })();
@@ -251,14 +243,13 @@ var Snix = {};
   };
 
   var proto = {
-    convert: convert,
     format: format,
     toJSON: toJSON
   };
 
   Snix.moment = function(value){
     value = arguments.length > 0 ? value : null;
-    return _.extend(this.shell(value), proto);
+    return _.extend(Snix.shell(value, convert), proto);
   };
     
 })();
@@ -274,13 +265,17 @@ var Snix = {};
     return val.toString().replace(/^\s+|\s+$/g, "");
   };
 
+  var startsWith = function(pattern){
+    return this() && this().indexOf(pattern) == 0;
+  };
+
   var proto = {
-    convert: convert
+    startsWith: startsWith
   };
 
   Snix.string = function(value){
     value = arguments.length > 0 ? value : null;
-    return _.extend(this.shell(value), proto);
+    return _.extend(Snix.shell(value, convert), proto);
   };
   
 })();
@@ -353,7 +348,6 @@ var Snix = {};
     clear: clear,
     isEmpty: isEmpty,
     sort: sort,
-    convert: convert,
     computeSelect: computeSelect,
     computePluck: computePluck
   };
@@ -364,7 +358,7 @@ var Snix = {};
     if(!_.isArray(value))
       throw "not an array";
 
-    var v = this.shell(value);
+    var v = Snix.shell(value, convert);
     v.sortAsc = false;
 
     return _.extend(v, proto);
@@ -425,10 +419,15 @@ var Snix = {};
     var value = typeFun.apply(Snix);
 
     var initialized = false;
+    var setter = function(newValue){
+      value(newValue);
+    };
 
     var rr = new Snix.ReRun(function(){
       initialized = true;
-      value(fun.apply(bind||{}));
+      var res = fun.apply(bind||{}, [setter]);
+      if(res !== undefined)
+        value(res);
     });
 
     var origGet = value.get;
@@ -631,7 +630,7 @@ var Snix = {};
 
   Bindings["on"] = create({
     init: function(el, acc){
-      var opts = Snix.unwrap(accessor());
+      var opts = Snix.unwrap(acc());
 
       for(var key in opts){
         $(el).on(key, function(e){
@@ -743,8 +742,7 @@ var Snix = {};
       if(visible){
         $(el).empty().show();
 
-        var child = $(this.tpl);
-        child.appendTo(el);
+        var child = $(this.tpl).appendTo(el);
 
         Snix.binder(child, context, vars);
       }else{
@@ -767,7 +765,7 @@ var Snix = {};
 
   Bindings["error"] = create({
     update: function(el, acc){
-      var field = Snix.unwrap(accessor());
+      var field = Snix.unwrap(acc());
       
       if(field.isInvalid())   $(el).addClass("error");
       else                    $(el).removeClass("error");
@@ -996,4 +994,429 @@ var Snix = {};
 
   Snix.Validator = Validator;
 
+})();
+
+
+// record
+
+
+(function(){
+
+  var method = function(method, url, data, context){
+    return $.ajax({
+      type: "POST", 
+      url: url,
+      data: (method == "POST") ? data : {data: data, _method: method},
+      dataType: "json",
+      context: context
+    });
+  };
+
+  var errorHandler = function(err){
+    alert("rest error");
+    if(window.console && window.console.error)
+      window.console.error(err);
+  };
+
+  var list = function(url){
+    return $.getJSON(url).error(errorHandler);
+  };
+
+  var create = function(url, data, context){
+    return method("POST", url, data, context).error(errorHandler);
+  };
+
+  var save = function(url, data, context){
+    return method("PUT", url, data, context).error(errorHandler);
+  };
+
+  var destroy = function(url, data, context){
+    return method("DELETE", url, data, context).error(errorHandler);
+  };
+
+  var Field = function(fun){
+    this.fun = fun;
+    this._dataIn = (function(v){ return v; });
+    this._dataOut = (function(v){ return v; });
+    this._equals = (function(v1,v2){ return v1 == v2; });
+  };
+
+  Field.prototype.equals = function(){
+    if(arguments.length == 0) return this._equals;
+    else{
+      this._equals = arguments[0];
+      return this;
+    }    
+  };
+
+  Field.prototype.initial = function(){
+    if(arguments.length == 0) return this._initial;
+    else{
+      var arg0 = arguments[0];
+      this._initial = (typeof(arg0) == "function" ? arg0 : (function(){ return arg0; }));
+      return this;
+    }
+  };
+  Field.prototype.dataIn = function(){
+    if(arguments.length == 0) return this._dataIn;
+    else{
+      this._dataIn = arguments[0];
+      return this;
+    }
+  };
+  Field.prototype.dataOut = function(){
+    if(arguments.length == 0) return this._dataOut;
+    else{
+      this._dataOut = arguments[0];
+      return this;
+    }
+  };
+
+  var Fields = function(attributes){
+    this.attributes = attributes;
+  };
+  
+  Fields.prototype.shell = function(name){
+    return (this.attributes[name] = new Field(Snix.shell).initial(""));
+  };
+  Fields.prototype.val = Fields.prototype.shell;
+
+  Fields.prototype.string = function(name){
+    return (this.attributes[name] = new Field(Snix.string).initial(""));
+  };
+  Fields.prototype.moment = function(name){
+    return (this.attributes[name] = new Field(Snix.moment)
+                                          .initial(function(){ return moment(); }))
+                                          .dataIn(function(v){ return moment(v); })
+                                          .equals(function(v1,v2){ return JSON.stringify(v1) == JSON.stringify(v2); });
+  };
+  Fields.prototype.int = function(name){
+    return (this.attributes[name] = new Field(Snix.int).initial(0));
+  };
+  Fields.prototype.float = function(name){
+    return (this.attributes[name] = new Field(Snix.float).initial(0.0));
+  };
+  Fields.prototype.boolean = function(name){
+    return (this.attributes[name] = new Field(Snix.boolean).initial(true));
+  };
+  Fields.prototype.enu = function(name, enuFun){
+    var field = new Field(function(value){
+      return Snix.shell(enuFun(value));
+    }).initial(null);
+
+    return (this.attributes[name] = field);
+  };
+
+  Snix.Record = function(baseUrl, fun){
+
+    var attributes = {};
+
+    fun(new Fields(attributes));
+
+    var attributeNames = _.keys(attributes);
+
+    var hasManyAndOne = {};
+
+    var r = function(data, parent){
+      this.id = Snix.shell(null);
+      this.validator = new Snix.Validator;
+
+      this.parent = parent;
+
+      for(var key in attributes){
+        (function(key){
+          var field = attributes[key];
+          this[key] = field.fun(data ? field.dataIn()(data[key]) : field.initial()());  
+        }).apply(this, [key]);
+      }
+
+      if(data)
+        this.setId(data);
+
+      this.attributesFrozen = Snix.shell();
+      this.refreshDirtyTracking();
+
+      var self = this;
+
+      for(var attributeName in hasManyAndOne){
+        (function(attributeName){
+
+          var recordType = hasManyAndOne[attributeName][0], recordOpts = hasManyAndOne[attributeName][1], computeFun = hasManyAndOne[attributeName][2];
+          this[attributeName] = computeFun(function(set){
+
+            var refreshAttribute = function(){
+              self[attributeName].refresh();
+            };
+
+            list(this.url() + "/" + attributeName).success(function(dataArrOrObject){
+
+              if(computeFun == Snix.computeArray){
+                var records = _.map(dataArrOrObject, function(data){ return new recordType(data, self).one("destroy", refreshAttribute); });
+                _.each(records, function(record){
+                  self[attributeName].trigger("load", record);
+                  r.trigger("load", record);
+                });
+                set(records);
+              }else{
+                var record = new recordType(dataArrOrObject, self).one("destroy", refreshAttribute);
+                self[attributeName].trigger("load", record);
+                r.trigger("load", record);
+                set(record);
+              }
+            });
+
+          }, this);
+          Snix.Event.register(this[attributeName], "load");
+
+        }).apply(this, [attributeName]);
+      }
+
+      if(this.init)
+        this.init();
+    };
+
+    Snix.Event.register(r, "load", "save", "create", "duplicate", "destroy");
+    Snix.Event.register(r.prototype, "save", "create", "duplicate", "destroy");
+
+    r.hasMany = function(attributeName, recordType, opts){
+      opts = opts || {};
+      hasManyAndOne[attributeName] = [recordType, opts, Snix.computeArray];
+    };
+
+    r.hasOne = function(attributeName, recordType, opts){
+      opts = opts || {};
+      hasManyAndOne[attributeName] = [recordType, opts, Snix.compute];
+    };
+
+    r.prototype.setId = function(data){
+      this.id(data.id);
+    };
+
+    r.prototype.revert = function(){
+      console.info(this.attributesFrozen());
+      _.each(this.attributesFrozen(), function(v, k){
+        this[k](v);
+      }, this);
+      this.refreshDirtyTracking();
+      this.validator.clear();
+    };
+
+    r.prototype.refreshDirtyTracking = function(){
+      this.attributesFrozen(this.attributesAsObj());
+    };
+
+    r.prototype.isDirty = function(){
+      var probeAttributeNames = (arguments.length == 0 ? attributeNames : arguments);
+
+      return !_.all(probeAttributeNames, function(attributeName){
+        return attributes[attributeName].equals()(this[attributeName](), this.attributesFrozen()[attributeName]);
+      }, this);
+    };
+
+    r.prototype.attributesAsObj = function(){
+      return _.inject(attributeNames, function(memo, k){
+        memo[k] = this[k]();
+        return memo;
+      }, {}, this);
+    };
+
+    r.prototype.toJSON = function(){
+      return _.pick(this, attributeNames);
+    };
+
+    r.prototype.canCreate = function(){
+      return this.id() == null;
+    };
+
+    r.prototype.canSave = function(){
+      return this.id() != null;
+    };
+
+    r.prototype.canDestroy = function(){
+      return this.id() != null;
+    };
+
+    r.prototype.canDuplicate = function(){
+      return this.id() != null;
+    };
+
+    r.prototype.url = function(){
+      return (this.parent != null ? this.parent.url() : "") + baseUrl + "/" + this.id();
+    };
+
+    r.prototype.createUrl = function(){
+      return (this.parent != null ? this.parent.url() : "") + baseUrl;
+    };
+
+    r.prototype.dataAsJSON = function(){
+      var obj = _.pick(this, attributeNames);
+
+      _.each(obj, function(v, k){
+        // TODO: pass unwrapped value in dataOut
+        var field = attributes[k];
+        var dataOut = field.dataOut()(v);
+
+        // json2 does not honor toJSON on function
+        dataOut = dataOut.toJSON ? dataOut.toJSON() : Snix.unwrap(dataOut);
+
+        obj[k] = dataOut;
+      });
+
+      var json = JSON.stringify(obj);
+      return json;
+    };
+
+    r.prototype.saveValidationRules = {};  
+    r.prototype.save = function(cb){
+      if(!this.canSave())
+        throw "illegal state";
+
+      this.validator.validate(this.saveValidationRules, this);
+
+      if(!this.validator.isEmpty())
+        return;
+
+      var data = this.dataAsJSON();
+
+      save(this.url(), data, this).success(function(data){
+        if(data && data.lock_version && this.lock_version)
+          this.lock_version(data.lock_version)
+
+        if(cb)
+          cb(this);
+
+        this.trigger("save", this);
+        r.trigger("save", this);
+
+        this.refreshDirtyTracking();
+      });
+
+      return this;
+    };
+
+    r.prototype.duplicate = function(cb){
+      if(!this.canDuplicate())
+        throw "illegal state";
+
+      var data = this.dataAsJSON();
+
+      create(this.url()+"/duplicate", data, this).success(function(data){ 
+        if(!data || !data.id)
+          throw "received no id for: "+url;
+
+        this.setId(data);
+
+        if(cb)
+          cb(this);
+
+        this.trigger("duplicate", this);
+        r.trigger("duplicate", this);
+
+        this.refreshDirtyTracking();
+      });
+
+      return this;
+    };
+
+    r.prototype.destroy = function(cb){
+      if(!this.canDestroy())
+        throw "illegal state";
+
+      var res = confirm("Delete this ?");
+
+      if(!res)
+        return this;
+
+      destroy(this.url(), {}, this).success(function(){ 
+        if(cb)
+          cb(this);
+
+        this.trigger("destroy", this);
+        r.trigger("destroy", this);
+      });
+
+      return this;
+    };
+
+    r.prototype.createValidationRules = {};
+    r.prototype.create = function(cb){
+      if(!this.canCreate())
+        throw "illegal state: " + this.id();
+
+      this.validator.validate(this.createValidationRules, this);
+
+      if(!this.validator.isEmpty())
+        return;
+
+      var data = this.dataAsJSON();
+      var url = this.createUrl();
+
+      create(url, data, this).success(function(data){ 
+        if(!data || !data.id)
+          throw "received no id for: "+url;
+
+        this.setId(data);
+
+        if(cb)
+          cb(this);
+
+        this.trigger("create", this);
+        r.trigger("create", this);
+
+        this.refreshDirtyTracking();
+      });
+
+      return this;
+    };
+
+    r.all = function(){
+      var res = Snix.array();
+
+      res.load = function(cb, bind){
+        list(baseUrl).success(function(data){
+          if(!data)
+            throw "received no result array for: "+url;
+
+          var records = _.map(data, function(e){ return new r(e, null); });
+          res(records);
+
+          if(cb)
+            cb.apply(bind||{}, [res]);
+
+          _.each(records, function(record){
+            r.trigger("load", record);
+          });
+        });
+        return this;
+      };
+
+      return res;
+    };
+
+    r.find = function(){
+      var res = Snix.shell();
+
+      res.load = function(id, cb, bind){
+        var url = baseUrl+"/"+id;
+        list(url).success(function(data){
+          if(!data)
+            throw "received no result object for: "+url;
+
+          res(new r(data, null));
+
+          var record = res();
+
+          if(cb)
+            cb.apply(bind||{}, [record]);
+
+          r.trigger("load", record);
+        });
+        return this;
+      };
+
+      return res;
+    };
+
+    return r;
+  };
 })();

@@ -18,10 +18,6 @@ describe("Snix", function(){
       expect(typeof(Snix.shell().get)).toBe("function");
     });
 
-    it("implements convert", function(){
-      expect(typeof(Snix.shell().convert)).toBe("function");
-    });
-
     it("is unwrappable", function(){
       expect(Snix.shell().__unwrap__).toBeTruthy();
     });
@@ -397,6 +393,14 @@ describe("Snix", function(){
       expect(c()).toBe("bob");
       expect(cnt).toBe(2);
 
+    });
+
+    it("the passed fun will be invoked with an argument, the setter function, which can be used as an alternative to set a new value", function(){
+      var c = Snix.compute(function(set){
+        set("joe");
+      });
+
+      expect(c()).toBe("joe");
     });
   });
 
