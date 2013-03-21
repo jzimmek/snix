@@ -496,6 +496,20 @@ describe("Snix", function(){
       expect($(el).text()).toBe("joe");
     });
 
+    it("attr", function(){
+      var url = "http://www.joe.de"
+
+      var el = $("<a data-bind='attr: {href: @href}'></a>");
+      $("#snix").append(el);
+
+      Snix.refresh({href: Snix.val(url)}, $("#snix")[0]);
+
+      expect($(el).attr('href')).toBe(url);
+
+      Snix.refresh({href: ""}, $("#snix")[0]);
+      expect($(el).attr('href')).toBeUndefined();
+    });
+
     it("html", function(){
       var app = {name: Snix.val("<b>joe</b>")};
 
